@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>레드스톤 논리회로 실험실</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+</head>
+<body>
+
+<div id="filewarn" hidden>
+  <div>
+    <h1>이 파일은 서버가 필요합니다</h1>
+    <p><code>dev.html</code> 은 ES 모듈로 나뉘어 있어 <code>file://</code> 로 직접 열면
+       브라우저가 CORS 정책으로 막습니다.</p>
+    <p>같은 폴더의 <b>index.html</b> 을 더블클릭하세요. 그 파일은 서버 없이 바로 열립니다.</p>
+    <p class="dim">개발용으로 이 파일을 쓰려면 폴더에서
+       <code>python -m http.server 8123</code> 을 실행하고
+       <code>http://localhost:8123/dev.html</code> 로 접속하세요.</p>
+  </div>
+</div>
+<script>
+  if (location.protocol === 'file:') {
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('filewarn').hidden = false;
+    });
+  }
+</script>
+
+<canvas id="gl"></canvas>
+
+<div id="crosshair"></div>
+
+<div id="topright">
+  <button id="btnBack" hidden>내 작업장으로</button>
+  <button id="btnHelp">조작법</button>
+  <button id="btnMenu">메뉴</button>
+</div>
+<div id="hud"></div>
+<div id="toast"></div>
+
+<!-- 미션 패널 : 제목 · 진리표 · 블럭 수 (채점은 실시간) -->
+<div id="mpanel" hidden>
+  <div class="mhead"><b id="mtitle"></b><span id="mblocks"></span></div>
+  <table id="mtable"></table>
+</div>
+
+<div id="hotbar"></div>
+
+<!-- 도움말 -->
+<div id="help" class="panel hidden">
+  <button id="btnHelpClose" class="close">닫기</button>
+  <h2>마우스</h2>
+  <table>
+    <tr><td>왼쪽 클릭</td><td>블럭 부수기</td></tr>
+    <tr><td>오른쪽 클릭</td><td>블럭 놓기 · 레버 켜고 끄기 · 리피터 방향 돌리기</td></tr>
+    <tr><td>가운데 클릭</td><td>보고 있는 블럭 고르기</td></tr>
+    <tr><td>휠</td><td>블럭 선택 (아래 칸을 눌러도 됩니다)</td></tr>
+    <tr><td>드래그</td><td>시점 돌리기</td></tr>
+  </table>
+
+  <h2>이동</h2>
+  <table>
+    <tr><td>W A S D</td><td>앞 · 왼쪽 · 뒤 · 오른쪽</td></tr>
+    <tr><td><b>W 두 번</b></td><td><b>달리기</b> (W 를 놓으면 풀립니다)</td></tr>
+    <tr><td>Space</td><td>점프 · (비행 중) 위로</td></tr>
+    <tr><td><b>Space 두 번</b></td><td><b>비행 ↔ 걷기</b></td></tr>
+    <tr><td>Shift</td><td>아래로</td></tr>
+    <tr><td>Ctrl</td><td>빠르게 (누르고 있는 동안)</td></tr>
+    <tr><td colspan="2" class="dim">회로는 자동으로 채점됩니다. 따로 누를 것이 없습니다.</td></tr>
+  </table>
+
+  <h2>레드스톤 규칙</h2>
+  <ul>
+    <li>신호 세기는 <b>0 ~ 15</b>. 와이어를 한 칸 지날 때마다 <b>1씩 줄어듭니다</b>.</li>
+    <li><b>레드스톤 블럭 · 레버 · 토치 · 리피터 출력</b>은 세기 15의 전원입니다.</li>
+    <li><b>일반 블럭</b>은 충전될 수 있습니다. <b>비전도 블럭(유리)</b>과 바닥판은 절대 충전되지 않습니다.</li>
+    <li><b>토치</b>는 자기가 붙은 블럭이 충전되면 <b>꺼집니다</b>.</li>
+    <li><b>리피터</b>는 신호를 15로 되살리고, 한쪽 방향으로만 흘려보내며, 지연을 1~4틱 줍니다.</li>
+  </ul>
+</div>
+
+<!-- 시작 / 메뉴 화면 -->
+<div id="menu">
+  <div class="panel side">
+    <h1>레드스톤 논리회로 실험실</h1>
+    <button id="btnPlay" class="primary">시작하기</button>
+    <button id="btnHelpMenu" class="wide">조작법</button>
+
+    <h2>미션</h2>
+    <div id="mlist"></div>
+
+    <div id="mcard" hidden>
+      <div id="mcardtitle"></div>
+      <div id="mhints"></div>
+      <div class="row">
+        <button id="btnHint">힌트</button>
+        <button id="btnSolution" hidden>정답 회로 보기</button>
+        <button id="btnResetMap">처음 상태로</button>
+      </div>
+    </div>
+
+    <h2>자유 제작</h2>
+    <button id="btnGoHome" class="mapbtn">내 작업장</button>
+
+    <details id="more">
+      <summary>제출, 저장, 예제, 설정</summary>
+
+      <h2>제출</h2>
+      <div class="row">
+        <input id="who" type="text" placeholder="이름" maxlength="20">
+        <button id="btnExport">파일로 내보내기</button>
+      </div>
+      <label class="filebtn wide">파일 열기<input id="fileImport" type="file" accept=".json"></label>
+
+      <h2>내 작업장 저장</h2>
+      <div class="row">
+        <button id="btnSave">저장</button>
+        <button id="btnLoad">불러오기</button>
+        <button id="btnClear">전체 지우기</button>
+      </div>
+
+      <h2>시뮬레이션</h2>
+      <div class="row">
+        <button id="btnPause">일시정지</button>
+        <button id="btnStep">한 틱 진행</button>
+      </div>
+      <label class="row">틱 간격
+        <input id="speed" type="range" min="50" max="600" step="25" value="100">
+        <span id="speedv">100ms</span>
+      </label>
+
+      <h2>교사용</h2>
+      <div class="row">
+        <button id="btnUnlockAll">모든 미션 열기</button>
+        <button id="btnResetProg">진행 상황 지우기</button>
+      </div>
+
+      <h2>예제 회로</h2>
+      <div id="exlist"></div>
+    </details>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
