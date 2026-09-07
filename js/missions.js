@@ -3,8 +3,9 @@ import { B } from './blocks.js';
 /*
  미션 시스템
  ------------------------------------------------------------------
- 예제 맵을 "정답지"로 두는 대신, 진리표를 목표로 주고 자동 채점한다.
- 이 파일은 DOM·three.js 에 의존하지 않으므로 node 로 바로 검증할 수 있다.
+ 진리표를 목표로 주고 자동 채점한다. 정답 회로는 이 파일에 두지 않는다
+ (배포 파일에 실리면 학생이 소스에서 볼 수 있다). 정답은 tools/solutions.mjs 에만 있고
+ 검증 도구가 거기서 읽어 미션이 풀리는지 확인한다.
    node tools/test-missions.mjs
 */
 
@@ -45,69 +46,39 @@ export const MISSIONS = [
     inputs: [[0, 0, 0]], outputs: [[5, 0, 0]],
     truth: [[0], [1]],
     allowed: WIRE_ONLY,
-    hints: ['레버와 램프 사이를 와이어로 빈틈없이 이어 보세요.'],
-    solution: [...row(1, 4, 0)],
   },
   {
     id: 'decay', day: 1, title: '멀리 있는 램프 켜기',
     inputs: [[0, 0, 0]], outputs: [[20, 0, 0]],
     truth: [[0], [1]],
     allowed: WIRE_REP,
-    hints: [
-      '와이어를 조준하면 화면 왼쪽 위에 신호 세기가 보입니다.',
-      '리피터는 약해진 신호를 다시 15로 되살립니다.',
-    ],
-    solution: [...row(1, 7, 0), [8, 0, 0, T.P, E], ...row(9, 19, 0)],
   },
   {
     id: 'not', day: 1, title: 'NOT 게이트',
     inputs: [[0, 0, 0]], outputs: [[7, 0, 0]],
     truth: [[1], [0]],
     allowed: GATE,
-    hints: [
-      '토치는 자기가 붙어 있는 블럭이 충전되면 꺼집니다.',
-      '와이어 → 일반 블럭 → 그 블럭의 반대쪽 면에 토치.',
-    ],
-    solution: [...row(1, 2, 0), ...inv(3, 0), ...row(5, 6, 0)],
   },
   {
     id: 'or', day: 1, title: 'OR 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[6, 0, 2]],
     truth: [[0], [1], [1], [1]],
     allowed: WIRE_ONLY,
-    hints: ['부품은 필요 없습니다. 두 신호가 만나기만 하면 됩니다.'],
-    solution: [
-      ...row(1, 3, 0), ...row(1, 3, 4), ...col(1, 3, 3), ...row(4, 5, 2),
-    ],
   },
   {
     id: 'nor', day: 1, title: 'NOR 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [0], [0], [0]],
     allowed: GATE,
-    hints: ['OR 를 만든 다음, 그 뒤에 NOT 을 붙이세요.'],
-    solution: [
-      ...row(1, 2, 0), ...row(1, 2, 4), ...col(1, 3, 2), [3, 0, 2, T.w],
-      ...inv(4, 2), ...row(6, 7, 2),
-    ],
   },
   {
     id: 'fix', day: 1, title: '고장난 회로 고치기',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [1], [1], [0]],
     allowed: GATE_G,
-    hints: [
-      '진리표에서 어느 줄이 틀렸는지 먼저 보세요.',
-      '비전도 블럭(유리)은 절대 충전되지 않습니다. 토치가 꺼질 수 없습니다.',
-    ],
     // 위쪽 인버터의 일반 블럭이 유리로 바뀌어 있다 → 토치가 늘 켜진 채 고장
     start: [
       ...row(1, 2, 0), [3, 0, 0, T.G], [4, 0, 0, T.X, W],
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), ...row(6, 7, 2),
-    ],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
       ...row(1, 2, 4), ...inv(3, 4),
       ...col(0, 4, 5), ...row(6, 7, 2),
     ],
@@ -117,47 +88,18 @@ export const MISSIONS = [
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [1], [1], [0]],
     allowed: GATE,
-    hints: ['두 입력을 각각 먼저 뒤집은 뒤 합치면 됩니다.'],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), ...row(6, 7, 2),
-    ],
   },
   {
     id: 'and', day: 1, title: 'AND 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[11, 0, 2]],
     truth: [[0], [0], [0], [1]],
     allowed: GATE,
-    hints: ['NAND 을 만든 뒤 한 번 더 뒤집으세요.'],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), [6, 0, 2, T.w], ...inv(7, 2), ...row(9, 10, 2),
-    ],
   },
   {
     id: 'xor', day: 2, title: 'XOR 게이트',
     inputs: [[2, 0, 0], [2, 0, 12]], outputs: [[19, 0, 6]],
     truth: [[0], [1], [1], [0]],
     allowed: GATE_ALL,
-    hints: [
-      '둘 중 하나만 켜졌을 때 = (A 또는 B) 이면서 (A 와 B 둘 다는 아님).',
-      'NOR 4개와 인버터 1개로 만들 수 있습니다.',
-    ],
-    solution: [
-      ...col(1, 6, 2), ...col(11, 6, 2),
-      [3, 0, 6, T.w], ...inv(4, 6),
-      ...row(3, 6, 0), [6, 0, 1, T.w], [6, 0, 2, T.w], ...col(5, 2, 5),
-      [7, 0, 2, T.w], ...inv(8, 2),
-      ...row(3, 6, 12), [6, 0, 11, T.w], [6, 0, 10, T.w], ...col(7, 10, 5),
-      [7, 0, 10, T.w], ...inv(8, 10),
-      [10, 0, 2, T.w], ...col(3, 6, 10),
-      [10, 0, 10, T.w], ...col(9, 7, 10),
-      [11, 0, 6, T.w], ...inv(12, 6),
-      [14, 0, 6, T.w], ...inv(15, 6),
-      ...row(17, 18, 6),
-    ],
   },
   {
     id: 'half', day: 2, title: '반가산기',
@@ -166,31 +108,6 @@ export const MISSIONS = [
     outNames: ['합', '올림'],
     truth: [[0, 0], [1, 0], [1, 0], [0, 1]],
     allowed: GATE_ALL,
-    hints: [
-      '합은 XOR, 올림은 AND 입니다.',
-      '레버 하나에서 와이어를 여러 갈래로 나눠 쓸 수 있습니다.',
-    ],
-    solution: [
-      // ---- 합 = XOR ----
-      ...col(1, 6, 2), ...col(11, 6, 2),
-      [3, 0, 6, T.w], ...inv(4, 6),                       // G1 = NOR(A,B)
-      ...row(3, 6, 0), [6, 0, 1, T.w], [6, 0, 2, T.w], ...col(5, 2, 5),
-      [7, 0, 2, T.w], ...inv(8, 2),                       // G2 = NOR(A,G1)
-      ...row(3, 6, 12), [6, 0, 11, T.w], [6, 0, 10, T.w], ...col(7, 10, 5),
-      [7, 0, 10, T.w], ...inv(8, 10),                     // G3 = NOR(B,G1)
-      [10, 0, 2, T.w], ...col(3, 6, 10),
-      [10, 0, 10, T.w], ...col(9, 7, 10),
-      [11, 0, 6, T.w], ...inv(12, 6),                     // G4 = XNOR
-      [14, 0, 6, T.w], ...inv(15, 6),                     // G5 = XOR = 합
-      ...row(17, 18, 6),
-      // ---- 올림 = NOR(합, NOR(A,B)) ----
-      ...col(11, 13, 1), [1, 0, 14, T.P, S], ...col(15, 16, 1),
-      ...row(2, 3, 16), ...inv(4, 16),                    // A OR B 를 다시 뒤집음
-      ...col(7, 16, 18),                                  // 합 신호를 남쪽으로
-      ...row(6, 19, 16),                                  // 두 신호를 합쳐 직선으로 진입
-      ...inv(20, 16),                                     // 올림 = NOR(합, NOR(A,B))
-      ...row(22, 23, 16),
-    ],
   },
   {
     id: 'full', day: 2, title: '전가산기 ★',
@@ -203,7 +120,6 @@ export const MISSIONS = [
       return [a ^ b ^ c, (a + b + c) >= 2 ? 1 : 0];
     }),
     allowed: GATE_ALL,
-    hints: ['반가산기 두 개와 OR 하나로 만들 수 있습니다.'],
   },
 ];
 
@@ -243,12 +159,12 @@ function put(world, blocks, base) {
   }
 }
 
-/* 미션 맵을 세운다. mode: 'start'(과제) | 'solution'(정답 회로) */
-export function loadMission(world, m, mode = 'start', base = ORIGIN) {
+/* 미션 맵을 세운다. extra 로 블럭을 더 얹을 수 있다 (검증 도구가 정답 회로를 넣을 때) */
+export function loadMission(world, m, extra = null, base = ORIGIN) {
   world.reset();
   put(world, frameBlocks(m), base);
-  const extra = mode === 'solution' ? (m.solution || m.start || []) : (m.start || []);
-  put(world, extra, base);
+  put(world, m.start || [], base);
+  if (extra) put(world, extra, base);
   return world;
 }
 

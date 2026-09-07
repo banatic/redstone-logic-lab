@@ -332,7 +332,6 @@ function viewBlocks(blocks) {
      0            내 작업장
      1..M         미션
      M+1..        예제 회로 (교사 시연용)
-     마지막        정답 회로 (그때그때 채워 넣는 임시 맵)
 ================================================================= */
 const MAPS = [{ key: 'home', name: '내 작업장', kind: 'home', data: null, view: null }];
 MISSIONS.forEach((m, k) => {
@@ -342,11 +341,8 @@ const EX0 = MAPS.length;
 for (const ex of EXAMPLES) {
   MAPS.push({ key: 'ex:' + ex.id, name: '예제 · ' + ex.name, kind: 'example', ex, data: null, view: null });
 }
-const SOL = MAPS.length;
-MAPS.push({ key: 'sol', name: '정답 회로', kind: 'solution', mission: null, data: null, view: null });
 
 let curMap = 0;
-let backTo = 0;
 const isHome = () => curMap === 0;
 function curMission() {
   const m = MAPS[curMap];
@@ -361,7 +357,6 @@ function snapshotView() {
 }
 function stashCurrent() {
   const m = MAPS[curMap];
-  if (m.kind === 'solution') return;   // 정답 회로는 보관하지 않는다
   m.data = world.serialize();
   m.view = snapshotView();
 }
@@ -379,16 +374,13 @@ function buildStarter() {
 /* 저장된 시점이 없을 때(예: 새로고침 뒤 처음 들어갈 때) 쓸 기본 시점 */
 function defaultView(m) {
   if (m.kind === 'mission') viewBlocks([...frameBlocks(m.mission), ...(m.mission.start || [])]);
-  else if (m.kind === 'solution') viewBlocks(m.mission.solution || []);
   else if (m.kind === 'example') viewBlocks(m.ex.blocks);
   else lookAt(22.5, 22.5, 13);
 }
 
 function initMap(m) {
   if (m.kind === 'mission') {
-    loadMission(world, m.mission, 'start');
-  } else if (m.kind === 'solution') {
-    loadMission(world, m.mission, 'solution');
+    loadMission(world, m.mission);
   } else if (m.kind === 'example') {
     loadExample(world, m.ex);
   } else {
@@ -403,7 +395,7 @@ function initMap(m) {
 
 function afterMapChange() {
   const m = MAPS[curMap];
-  const mis = m.kind === 'solution' ? m.mission : curMission();
+  const mis = curMission();
   particles.clear();
 
   // 미션마다 쓸 수 있는 블럭이 다르다
@@ -422,8 +414,7 @@ function afterMapChange() {
   countDirty = true;
 
   const back = el('btnBack');
-  if (m.kind === 'solution') { back.hidden = false; back.textContent = '미션으로'; }
-  else if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
+  if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
   else back.hidden = true;
 
   buildMissionList();
@@ -438,13 +429,9 @@ function gotoMap(k) {
   if (k === curMap) { toast('이미 ' + MAPS[k].name + ' 입니다'); return; }
   stashCurrent();
   saveMaps();
-  const from = curMap;
   curMap = k;
   const m = MAPS[k];
-  if (m.kind === 'solution') {
-    initMap(m);
-    backTo = from === SOL ? 0 : from;
-  } else if (!m.data) {
+  if (!m.data) {
     initMap(m);
   } else {
     world.deserialize(m.data);
@@ -467,7 +454,7 @@ let savedVersion = -1;
 function saveMaps() {
   try {
     const out = {};
-    for (const m of MAPS) if (m.data && m.kind !== 'solution') out[m.key] = m.data;
+    for (const m of MAPS) if (m.data) out[m.key] = m.data;
     localStorage.setItem(MAPS_KEY, JSON.stringify(out));
     savedVersion = world.version;
   } catch (err) { /* file:// 등에서 막히면 무시 */ }
@@ -481,7 +468,7 @@ function loadMaps() {
   } catch (err) { /* 무시 */ }
 }
 
-let prog = { cleared: {}, hints: {}, unlockAll: false };
+let prog = { cleared: {}, unlockAll: false };
 function saveProgress() {
   try { localStorage.setItem(PROG_KEY, JSON.stringify(prog)); } catch (err) { /* 무시 */ }
 }
@@ -624,31 +611,7 @@ function buildMissionCard() {
   if (!m) { card.hidden = true; return; }
   card.hidden = false;
   el('mcardtitle').textContent = m.title;
-
-  const shown = prog.hints[m.id] || 0;
-  const hints = m.hints || [];
-  el('mhints').innerHTML = hints.slice(0, shown).map((h) => `<p class="hint">${h}</p>`).join('');
-
-  const bh = el('btnHint');
-  bh.hidden = shown >= hints.length;
-  bh.textContent = shown === 0 ? '힌트' : '힌트 더 보기';
-
-  const bs = el('btnSolution');
-  bs.hidden = !(m.solution && shown >= hints.length);
 }
-
-el('btnHint').onclick = () => {
-  const m = curMission(); if (!m) return;
-  prog.hints[m.id] = (prog.hints[m.id] || 0) + 1;
-  saveProgress();
-  buildMissionCard();
-};
-el('btnSolution').onclick = () => {
-  const m = curMission(); if (!m || !m.solution) return;
-  MAPS[SOL].mission = m;
-  MAPS[SOL].name = m.title + ' — 정답 회로';
-  gotoMap(SOL);
-};
 
 const toggleHelp = () => el('help').classList.toggle('hidden');
 el('btnHelp').onclick = toggleHelp;
@@ -656,7 +619,7 @@ el('btnHelpMenu').onclick = toggleHelp;
 el('btnHelpClose').onclick = () => el('help').classList.add('hidden');
 
 el('btnGoHome').onclick = () => gotoMap(0);
-el('btnBack').onclick = () => gotoMap(MAPS[curMap].kind === 'solution' ? backTo : 0);
+el('btnBack').onclick = () => gotoMap(0);
 
 el('btnResetMap').onclick = () => {
   const m = MAPS[curMap];
@@ -676,7 +639,7 @@ el('btnUnlockAll').onclick = () => {
 };
 el('btnResetProg').onclick = () => {
   if (!confirm('미션 진행 상황(통과 기록·힌트)을 모두 지울까요?')) return;
-  prog = { cleared: {}, hints: {}, unlockAll: false };
+  prog = { cleared: {}, unlockAll: false };
   saveProgress();
   buildMissionList(); buildMissionCard();
   toast('진행 상황을 지웠습니다');
@@ -851,7 +814,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyP') el('btnPause').click();
   if (e.code === 'KeyT') el('btnStep').click();
   if (e.code === 'KeyH') el('help').classList.toggle('hidden');
-  if (e.code === 'KeyB') gotoMap(MAPS[curMap].kind === 'solution' ? backTo : 0);
+  if (e.code === 'KeyB') gotoMap(0);
   if (e.code === 'Space' && playing()) {
     e.preventDefault();
     if (!e.repeat) doubleJump();          // 점프 두 번 = 비행 ↔ 걷기
@@ -919,7 +882,7 @@ function frame(now) {
   }
 
   // 만든 것은 맵마다 조금씩 자동 저장
-  if (world.version !== savedVersion && MAPS[curMap].kind !== 'solution') {
+  if (world.version !== savedVersion) {
     autoT += dt;
     if (autoT > 4) { autoT = 0; stashCurrent(); saveMaps(); }
   } else autoT = 0;

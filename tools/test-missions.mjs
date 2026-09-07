@@ -1,7 +1,8 @@
 // 미션 정답 회로 검증:  node tools/test-missions.mjs
 import { World } from '../js/world.js';
 import { Redstone } from '../js/redstone.js';
-import { MISSIONS, loadMission, gradeMission, maskForRow, inputName, outputName } from '../js/missions.js';
+import { MISSIONS, loadMission, gradeMission, maskForRow } from '../js/missions.js';
+import { SOLUTIONS } from './solutions.mjs';
 
 let fail = 0;
 
@@ -10,7 +11,7 @@ for (const m of MISSIONS) {
 
   // 1) 시작 상태(과제)는 아직 통과하면 안 된다
   const w0 = new World();
-  loadMission(w0, m, 'start');
+  loadMission(w0, m);
   const rs0 = new Redstone(w0);
   const g0 = gradeMission(w0, rs0, m);
   if (g0.pass) {
@@ -19,12 +20,13 @@ for (const m of MISSIONS) {
   }
 
   // 2) 정답 회로는 반드시 통과해야 한다
-  if (!m.solution) {
+  const sol = SOLUTIONS[m.id];
+  if (!sol) {
     console.log(`- ${m.id.padEnd(7)} : 정답 회로 없음 (심화 과제)`);
     continue;
   }
   const w = new World();
-  loadMission(w, m, 'solution');
+  loadMission(w, m, sol);
   const rs = new Redstone(w);
   const g = gradeMission(w, rs, m);
 

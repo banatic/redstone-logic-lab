@@ -207,14 +207,12 @@ button.primary:hover{background:#000}
 .misbtn.on{background:var(--paper-2);box-shadow:inset 3px 0 0 var(--red)}
 .misbtn.on .mn{color:var(--red)}
 
-/* 미션 카드 : 힌트 */
+/* 미션 카드 */
 #mcard{margin-top:12px;padding:12px 12px 12px 14px;border-left:2px solid var(--ink)}
 #mcard[hidden]{display:none}
 #mcardtitle{font-weight:700;margin-bottom:8px}
 #mcard .row{gap:5px}
 #mcard button{font-size:var(--fs-1);padding:5px 9px}
-.hint{font-size:var(--fs-2);color:var(--ink);line-height:1.6;margin:0 0 8px;word-break:keep-all}
-.hint::before{content:"—";color:var(--ink-3);margin-right:6px}
 
 .mapbtn{width:100%;text-align:left;padding:9px 12px;font-size:var(--fs-3)}
 .mapbtn.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--red)}
@@ -350,12 +348,7 @@ button.primary:hover{background:#000}
 
     <div id="mcard" hidden>
       <div id="mcardtitle"></div>
-      <div id="mhints"></div>
-      <div class="row">
-        <button id="btnHint">힌트</button>
-        <button id="btnSolution" hidden>정답 회로 보기</button>
-        <button id="btnResetMap">처음 상태로</button>
-      </div>
+      <div class="row"><button id="btnResetMap">처음 상태로</button></div>
     </div>
 
     <h2>자유 제작</h2>
@@ -54578,117 +54571,6 @@ function wireCol(z0, z1, x, y = 0) {
 
 const EXAMPLES = [
   {
-    id: 'not',
-    name: 'NOT 게이트 (인버터)',
-    desc: '레버를 켜면 램프가 꺼집니다. 와이어가 일반 블럭을 충전하면, 그 블럭에 붙은 토치가 꺼지는 원리입니다.',
-    inputs: [[0, 0, 0]], output: [7, 0, 0], truth: [1, 0],
-    blocks: [
-      [0, 0, 0, T.V, D],
-      ...wireRow(1, 2, 0),
-      [3, 0, 0, T.S],
-      [4, 0, 0, T.X, W],
-      ...wireRow(5, 6, 0),
-      [7, 0, 0, T.L],
-    ],
-  },
-  {
-    id: 'or',
-    name: 'OR 게이트',
-    desc: '두 신호를 하나의 와이어로 합치기만 하면 OR 입니다. 둘 중 하나만 켜도 램프가 켜집니다.',
-    inputs: [[0, 0, 0], [0, 0, 4]], output: [6, 0, 2], truth: [0, 1, 1, 1],
-    blocks: [
-      [0, 0, 0, T.V, D], ...wireRow(1, 3, 0),
-      [0, 0, 4, T.V, D], ...wireRow(1, 3, 4),
-      ...wireCol(1, 3, 3),
-      ...wireRow(4, 5, 2),
-      [6, 0, 2, T.L],
-    ],
-  },
-  {
-    id: 'nor',
-    name: 'NOR 게이트',
-    desc: 'OR 회로 뒤에 인버터(일반 블럭 + 토치)를 붙이면 NOR 입니다. 둘 다 꺼져 있을 때만 램프가 켜집니다.',
-    inputs: [[0, 0, 0], [0, 0, 4]], output: [8, 0, 2], truth: [1, 0, 0, 0],
-    blocks: [
-      [0, 0, 0, T.V, D], ...wireRow(1, 2, 0),
-      [0, 0, 4, T.V, D], ...wireRow(1, 2, 4),
-      ...wireCol(1, 3, 2),
-      [3, 0, 2, T.w],
-      [4, 0, 2, T.S],
-      [5, 0, 2, T.X, W],
-      ...wireRow(6, 7, 2),
-      [8, 0, 2, T.L],
-    ],
-  },
-  {
-    id: 'nand',
-    name: 'NAND 게이트',
-    desc: '각 입력을 먼저 NOT 시킨 뒤 두 출력을 한 와이어로 합칩니다. (¬A OR ¬B = ¬(A AND B))',
-    inputs: [[0, 0, 0], [0, 0, 4]], output: [8, 0, 2], truth: [1, 1, 1, 0],
-    blocks: [
-      [0, 0, 0, T.V, D], ...wireRow(1, 2, 0), [3, 0, 0, T.S], [4, 0, 0, T.X, W],
-      [0, 0, 4, T.V, D], ...wireRow(1, 2, 4), [3, 0, 4, T.S], [4, 0, 4, T.X, W],
-      ...wireCol(0, 4, 5),
-      ...wireRow(6, 7, 2),
-      [8, 0, 2, T.L],
-    ],
-  },
-  {
-    id: 'and',
-    name: 'AND 게이트',
-    desc: 'NAND 결과를 한 번 더 뒤집으면 AND 입니다. 인버터 3개로 만든 회로입니다.',
-    inputs: [[0, 0, 0], [0, 0, 4]], output: [11, 0, 2], truth: [0, 0, 0, 1],
-    blocks: [
-      [0, 0, 0, T.V, D], ...wireRow(1, 2, 0), [3, 0, 0, T.S], [4, 0, 0, T.X, W],
-      [0, 0, 4, T.V, D], ...wireRow(1, 2, 4), [3, 0, 4, T.S], [4, 0, 4, T.X, W],
-      ...wireCol(0, 4, 5),
-      [6, 0, 2, T.w], [7, 0, 2, T.S], [8, 0, 2, T.X, W],
-      ...wireRow(9, 10, 2),
-      [11, 0, 2, T.L],
-    ],
-  },
-  {
-    id: 'xor',
-    name: 'XOR 게이트',
-    desc: 'NOR 게이트 4개와 인버터 1개로 만든 XOR 입니다. 레버 하나에서 와이어를 여러 갈래로 나눠 쓰는 방법(팬아웃)도 함께 살펴보세요.',
-    inputs: [[2, 0, 0], [2, 0, 12]], output: [19, 0, 6], truth: [0, 1, 1, 0],
-    blocks: [
-      [2, 0, 0, T.V, D],
-      [2, 0, 12, T.V, D],
-      // G1 = NOR(A,B)
-      ...wireCol(1, 6, 2),
-      ...wireCol(11, 6, 2),
-      [3, 0, 6, T.w], [4, 0, 6, T.S], [5, 0, 6, T.X, W],
-      // G2 = NOR(A, G1)
-      ...wireRow(3, 6, 0), [6, 0, 1, T.w], [6, 0, 2, T.w],
-      ...wireCol(5, 2, 5),
-      [7, 0, 2, T.w], [8, 0, 2, T.S], [9, 0, 2, T.X, W],
-      // G3 = NOR(B, G1)
-      ...wireRow(3, 6, 12), [6, 0, 11, T.w], [6, 0, 10, T.w],
-      ...wireCol(7, 10, 5),
-      [7, 0, 10, T.w], [8, 0, 10, T.S], [9, 0, 10, T.X, W],
-      // G4 = NOR(G2,G3) = XNOR
-      [10, 0, 2, T.w], ...wireCol(3, 6, 10),
-      [10, 0, 10, T.w], ...wireCol(9, 7, 10),
-      [11, 0, 6, T.w], [12, 0, 6, T.S], [13, 0, 6, T.X, W],
-      // G5 = NOT(XNOR) = XOR
-      [14, 0, 6, T.w], [15, 0, 6, T.S], [16, 0, 6, T.X, W],
-      ...wireRow(17, 18, 6),
-      [19, 0, 6, T.L],
-    ],
-  },
-  {
-    id: 'decay',
-    name: '신호 감쇠와 리피터',
-    desc: '위쪽 줄은 와이어만 17칸. 세기가 한 칸마다 1씩 줄어 15칸을 넘으면 신호가 사라집니다. 아래쪽 줄은 중간에 리피터를 넣어 신호를 15로 되살립니다.',
-    inputs: [[0, 0, 0], [0, 0, 4]], output: [18, 0, 4], truth: [0, 0, 1, 1],
-    blocks: [
-      [0, 0, 0, T.V, D], ...wireRow(1, 17, 0), [18, 0, 0, T.L],
-      [0, 0, 4, T.V, D], ...wireRow(1, 8, 4), [9, 0, 4, T.P, E, 0],
-      ...wireRow(10, 17, 4), [18, 0, 4, T.L],
-    ],
-  },
-  {
     id: 'delay',
     name: '리피터 지연 비교',
     desc: '같은 신호를 지연 1·2·3·4틱 리피터에 각각 넣었습니다. 레버를 켜면 램프가 순서대로 켜집니다. 리피터를 우클릭하면 지연이 바뀝니다.',
@@ -54775,8 +54657,9 @@ const { B } = __M["blocks"];
 /*
  미션 시스템
  ------------------------------------------------------------------
- 예제 맵을 "정답지"로 두는 대신, 진리표를 목표로 주고 자동 채점한다.
- 이 파일은 DOM·three.js 에 의존하지 않으므로 node 로 바로 검증할 수 있다.
+ 진리표를 목표로 주고 자동 채점한다. 정답 회로는 이 파일에 두지 않는다
+ (배포 파일에 실리면 학생이 소스에서 볼 수 있다). 정답은 tools/solutions.mjs 에만 있고
+ 검증 도구가 거기서 읽어 미션이 풀리는지 확인한다.
    node tools/test-missions.mjs
 */
 
@@ -54817,69 +54700,39 @@ const MISSIONS = [
     inputs: [[0, 0, 0]], outputs: [[5, 0, 0]],
     truth: [[0], [1]],
     allowed: WIRE_ONLY,
-    hints: ['레버와 램프 사이를 와이어로 빈틈없이 이어 보세요.'],
-    solution: [...row(1, 4, 0)],
   },
   {
     id: 'decay', day: 1, title: '멀리 있는 램프 켜기',
     inputs: [[0, 0, 0]], outputs: [[20, 0, 0]],
     truth: [[0], [1]],
     allowed: WIRE_REP,
-    hints: [
-      '와이어를 조준하면 화면 왼쪽 위에 신호 세기가 보입니다.',
-      '리피터는 약해진 신호를 다시 15로 되살립니다.',
-    ],
-    solution: [...row(1, 7, 0), [8, 0, 0, T.P, E], ...row(9, 19, 0)],
   },
   {
     id: 'not', day: 1, title: 'NOT 게이트',
     inputs: [[0, 0, 0]], outputs: [[7, 0, 0]],
     truth: [[1], [0]],
     allowed: GATE,
-    hints: [
-      '토치는 자기가 붙어 있는 블럭이 충전되면 꺼집니다.',
-      '와이어 → 일반 블럭 → 그 블럭의 반대쪽 면에 토치.',
-    ],
-    solution: [...row(1, 2, 0), ...inv(3, 0), ...row(5, 6, 0)],
   },
   {
     id: 'or', day: 1, title: 'OR 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[6, 0, 2]],
     truth: [[0], [1], [1], [1]],
     allowed: WIRE_ONLY,
-    hints: ['부품은 필요 없습니다. 두 신호가 만나기만 하면 됩니다.'],
-    solution: [
-      ...row(1, 3, 0), ...row(1, 3, 4), ...col(1, 3, 3), ...row(4, 5, 2),
-    ],
   },
   {
     id: 'nor', day: 1, title: 'NOR 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [0], [0], [0]],
     allowed: GATE,
-    hints: ['OR 를 만든 다음, 그 뒤에 NOT 을 붙이세요.'],
-    solution: [
-      ...row(1, 2, 0), ...row(1, 2, 4), ...col(1, 3, 2), [3, 0, 2, T.w],
-      ...inv(4, 2), ...row(6, 7, 2),
-    ],
   },
   {
     id: 'fix', day: 1, title: '고장난 회로 고치기',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [1], [1], [0]],
     allowed: GATE_G,
-    hints: [
-      '진리표에서 어느 줄이 틀렸는지 먼저 보세요.',
-      '비전도 블럭(유리)은 절대 충전되지 않습니다. 토치가 꺼질 수 없습니다.',
-    ],
     // 위쪽 인버터의 일반 블럭이 유리로 바뀌어 있다 → 토치가 늘 켜진 채 고장
     start: [
       ...row(1, 2, 0), [3, 0, 0, T.G], [4, 0, 0, T.X, W],
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), ...row(6, 7, 2),
-    ],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
       ...row(1, 2, 4), ...inv(3, 4),
       ...col(0, 4, 5), ...row(6, 7, 2),
     ],
@@ -54889,47 +54742,18 @@ const MISSIONS = [
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[8, 0, 2]],
     truth: [[1], [1], [1], [0]],
     allowed: GATE,
-    hints: ['두 입력을 각각 먼저 뒤집은 뒤 합치면 됩니다.'],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), ...row(6, 7, 2),
-    ],
   },
   {
     id: 'and', day: 1, title: 'AND 게이트',
     inputs: [[0, 0, 0], [0, 0, 4]], outputs: [[11, 0, 2]],
     truth: [[0], [0], [0], [1]],
     allowed: GATE,
-    hints: ['NAND 을 만든 뒤 한 번 더 뒤집으세요.'],
-    solution: [
-      ...row(1, 2, 0), ...inv(3, 0),
-      ...row(1, 2, 4), ...inv(3, 4),
-      ...col(0, 4, 5), [6, 0, 2, T.w], ...inv(7, 2), ...row(9, 10, 2),
-    ],
   },
   {
     id: 'xor', day: 2, title: 'XOR 게이트',
     inputs: [[2, 0, 0], [2, 0, 12]], outputs: [[19, 0, 6]],
     truth: [[0], [1], [1], [0]],
     allowed: GATE_ALL,
-    hints: [
-      '둘 중 하나만 켜졌을 때 = (A 또는 B) 이면서 (A 와 B 둘 다는 아님).',
-      'NOR 4개와 인버터 1개로 만들 수 있습니다.',
-    ],
-    solution: [
-      ...col(1, 6, 2), ...col(11, 6, 2),
-      [3, 0, 6, T.w], ...inv(4, 6),
-      ...row(3, 6, 0), [6, 0, 1, T.w], [6, 0, 2, T.w], ...col(5, 2, 5),
-      [7, 0, 2, T.w], ...inv(8, 2),
-      ...row(3, 6, 12), [6, 0, 11, T.w], [6, 0, 10, T.w], ...col(7, 10, 5),
-      [7, 0, 10, T.w], ...inv(8, 10),
-      [10, 0, 2, T.w], ...col(3, 6, 10),
-      [10, 0, 10, T.w], ...col(9, 7, 10),
-      [11, 0, 6, T.w], ...inv(12, 6),
-      [14, 0, 6, T.w], ...inv(15, 6),
-      ...row(17, 18, 6),
-    ],
   },
   {
     id: 'half', day: 2, title: '반가산기',
@@ -54938,31 +54762,6 @@ const MISSIONS = [
     outNames: ['합', '올림'],
     truth: [[0, 0], [1, 0], [1, 0], [0, 1]],
     allowed: GATE_ALL,
-    hints: [
-      '합은 XOR, 올림은 AND 입니다.',
-      '레버 하나에서 와이어를 여러 갈래로 나눠 쓸 수 있습니다.',
-    ],
-    solution: [
-      // ---- 합 = XOR ----
-      ...col(1, 6, 2), ...col(11, 6, 2),
-      [3, 0, 6, T.w], ...inv(4, 6),                       // G1 = NOR(A,B)
-      ...row(3, 6, 0), [6, 0, 1, T.w], [6, 0, 2, T.w], ...col(5, 2, 5),
-      [7, 0, 2, T.w], ...inv(8, 2),                       // G2 = NOR(A,G1)
-      ...row(3, 6, 12), [6, 0, 11, T.w], [6, 0, 10, T.w], ...col(7, 10, 5),
-      [7, 0, 10, T.w], ...inv(8, 10),                     // G3 = NOR(B,G1)
-      [10, 0, 2, T.w], ...col(3, 6, 10),
-      [10, 0, 10, T.w], ...col(9, 7, 10),
-      [11, 0, 6, T.w], ...inv(12, 6),                     // G4 = XNOR
-      [14, 0, 6, T.w], ...inv(15, 6),                     // G5 = XOR = 합
-      ...row(17, 18, 6),
-      // ---- 올림 = NOR(합, NOR(A,B)) ----
-      ...col(11, 13, 1), [1, 0, 14, T.P, S], ...col(15, 16, 1),
-      ...row(2, 3, 16), ...inv(4, 16),                    // A OR B 를 다시 뒤집음
-      ...col(7, 16, 18),                                  // 합 신호를 남쪽으로
-      ...row(6, 19, 16),                                  // 두 신호를 합쳐 직선으로 진입
-      ...inv(20, 16),                                     // 올림 = NOR(합, NOR(A,B))
-      ...row(22, 23, 16),
-    ],
   },
   {
     id: 'full', day: 2, title: '전가산기 ★',
@@ -54975,7 +54774,6 @@ const MISSIONS = [
       return [a ^ b ^ c, (a + b + c) >= 2 ? 1 : 0];
     }),
     allowed: GATE_ALL,
-    hints: ['반가산기 두 개와 OR 하나로 만들 수 있습니다.'],
   },
 ];
 
@@ -55015,12 +54813,12 @@ function put(world, blocks, base) {
   }
 }
 
-/* 미션 맵을 세운다. mode: 'start'(과제) | 'solution'(정답 회로) */
-function loadMission(world, m, mode = 'start', base = ORIGIN) {
+/* 미션 맵을 세운다. extra 로 블럭을 더 얹을 수 있다 (검증 도구가 정답 회로를 넣을 때) */
+function loadMission(world, m, extra = null, base = ORIGIN) {
   world.reset();
   put(world, frameBlocks(m), base);
-  const extra = mode === 'solution' ? (m.solution || m.start || []) : (m.start || []);
-  put(world, extra, base);
+  put(world, m.start || [], base);
+  if (extra) put(world, extra, base);
   return world;
 }
 
@@ -55441,7 +55239,6 @@ function viewBlocks(blocks) {
      0            내 작업장
      1..M         미션
      M+1..        예제 회로 (교사 시연용)
-     마지막        정답 회로 (그때그때 채워 넣는 임시 맵)
 ================================================================= */
 const MAPS = [{ key: 'home', name: '내 작업장', kind: 'home', data: null, view: null }];
 MISSIONS.forEach((m, k) => {
@@ -55451,11 +55248,8 @@ const EX0 = MAPS.length;
 for (const ex of EXAMPLES) {
   MAPS.push({ key: 'ex:' + ex.id, name: '예제 · ' + ex.name, kind: 'example', ex, data: null, view: null });
 }
-const SOL = MAPS.length;
-MAPS.push({ key: 'sol', name: '정답 회로', kind: 'solution', mission: null, data: null, view: null });
 
 let curMap = 0;
-let backTo = 0;
 const isHome = () => curMap === 0;
 function curMission() {
   const m = MAPS[curMap];
@@ -55470,7 +55264,6 @@ function snapshotView() {
 }
 function stashCurrent() {
   const m = MAPS[curMap];
-  if (m.kind === 'solution') return;   // 정답 회로는 보관하지 않는다
   m.data = world.serialize();
   m.view = snapshotView();
 }
@@ -55488,16 +55281,13 @@ function buildStarter() {
 /* 저장된 시점이 없을 때(예: 새로고침 뒤 처음 들어갈 때) 쓸 기본 시점 */
 function defaultView(m) {
   if (m.kind === 'mission') viewBlocks([...frameBlocks(m.mission), ...(m.mission.start || [])]);
-  else if (m.kind === 'solution') viewBlocks(m.mission.solution || []);
   else if (m.kind === 'example') viewBlocks(m.ex.blocks);
   else lookAt(22.5, 22.5, 13);
 }
 
 function initMap(m) {
   if (m.kind === 'mission') {
-    loadMission(world, m.mission, 'start');
-  } else if (m.kind === 'solution') {
-    loadMission(world, m.mission, 'solution');
+    loadMission(world, m.mission);
   } else if (m.kind === 'example') {
     loadExample(world, m.ex);
   } else {
@@ -55512,7 +55302,7 @@ function initMap(m) {
 
 function afterMapChange() {
   const m = MAPS[curMap];
-  const mis = m.kind === 'solution' ? m.mission : curMission();
+  const mis = curMission();
   particles.clear();
 
   // 미션마다 쓸 수 있는 블럭이 다르다
@@ -55531,8 +55321,7 @@ function afterMapChange() {
   countDirty = true;
 
   const back = el('btnBack');
-  if (m.kind === 'solution') { back.hidden = false; back.textContent = '미션으로'; }
-  else if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
+  if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
   else back.hidden = true;
 
   buildMissionList();
@@ -55547,13 +55336,9 @@ function gotoMap(k) {
   if (k === curMap) { toast('이미 ' + MAPS[k].name + ' 입니다'); return; }
   stashCurrent();
   saveMaps();
-  const from = curMap;
   curMap = k;
   const m = MAPS[k];
-  if (m.kind === 'solution') {
-    initMap(m);
-    backTo = from === SOL ? 0 : from;
-  } else if (!m.data) {
+  if (!m.data) {
     initMap(m);
   } else {
     world.deserialize(m.data);
@@ -55576,7 +55361,7 @@ let savedVersion = -1;
 function saveMaps() {
   try {
     const out = {};
-    for (const m of MAPS) if (m.data && m.kind !== 'solution') out[m.key] = m.data;
+    for (const m of MAPS) if (m.data) out[m.key] = m.data;
     localStorage.setItem(MAPS_KEY, JSON.stringify(out));
     savedVersion = world.version;
   } catch (err) { /* file:// 등에서 막히면 무시 */ }
@@ -55590,7 +55375,7 @@ function loadMaps() {
   } catch (err) { /* 무시 */ }
 }
 
-let prog = { cleared: {}, hints: {}, unlockAll: false };
+let prog = { cleared: {}, unlockAll: false };
 function saveProgress() {
   try { localStorage.setItem(PROG_KEY, JSON.stringify(prog)); } catch (err) { /* 무시 */ }
 }
@@ -55733,31 +55518,7 @@ function buildMissionCard() {
   if (!m) { card.hidden = true; return; }
   card.hidden = false;
   el('mcardtitle').textContent = m.title;
-
-  const shown = prog.hints[m.id] || 0;
-  const hints = m.hints || [];
-  el('mhints').innerHTML = hints.slice(0, shown).map((h) => `<p class="hint">${h}</p>`).join('');
-
-  const bh = el('btnHint');
-  bh.hidden = shown >= hints.length;
-  bh.textContent = shown === 0 ? '힌트' : '힌트 더 보기';
-
-  const bs = el('btnSolution');
-  bs.hidden = !(m.solution && shown >= hints.length);
 }
-
-el('btnHint').onclick = () => {
-  const m = curMission(); if (!m) return;
-  prog.hints[m.id] = (prog.hints[m.id] || 0) + 1;
-  saveProgress();
-  buildMissionCard();
-};
-el('btnSolution').onclick = () => {
-  const m = curMission(); if (!m || !m.solution) return;
-  MAPS[SOL].mission = m;
-  MAPS[SOL].name = m.title + ' — 정답 회로';
-  gotoMap(SOL);
-};
 
 const toggleHelp = () => el('help').classList.toggle('hidden');
 el('btnHelp').onclick = toggleHelp;
@@ -55765,7 +55526,7 @@ el('btnHelpMenu').onclick = toggleHelp;
 el('btnHelpClose').onclick = () => el('help').classList.add('hidden');
 
 el('btnGoHome').onclick = () => gotoMap(0);
-el('btnBack').onclick = () => gotoMap(MAPS[curMap].kind === 'solution' ? backTo : 0);
+el('btnBack').onclick = () => gotoMap(0);
 
 el('btnResetMap').onclick = () => {
   const m = MAPS[curMap];
@@ -55785,7 +55546,7 @@ el('btnUnlockAll').onclick = () => {
 };
 el('btnResetProg').onclick = () => {
   if (!confirm('미션 진행 상황(통과 기록·힌트)을 모두 지울까요?')) return;
-  prog = { cleared: {}, hints: {}, unlockAll: false };
+  prog = { cleared: {}, unlockAll: false };
   saveProgress();
   buildMissionList(); buildMissionCard();
   toast('진행 상황을 지웠습니다');
@@ -55960,7 +55721,7 @@ addEventListener('keydown', (e) => {
   if (e.code === 'KeyP') el('btnPause').click();
   if (e.code === 'KeyT') el('btnStep').click();
   if (e.code === 'KeyH') el('help').classList.toggle('hidden');
-  if (e.code === 'KeyB') gotoMap(MAPS[curMap].kind === 'solution' ? backTo : 0);
+  if (e.code === 'KeyB') gotoMap(0);
   if (e.code === 'Space' && playing()) {
     e.preventDefault();
     if (!e.repeat) doubleJump();          // 점프 두 번 = 비행 ↔ 걷기
@@ -56028,7 +55789,7 @@ function frame(now) {
   }
 
   // 만든 것은 맵마다 조금씩 자동 저장
-  if (world.version !== savedVersion && MAPS[curMap].kind !== 'solution') {
+  if (world.version !== savedVersion) {
     autoT += dt;
     if (autoT > 4) { autoT = 0; stashCurrent(); saveMaps(); }
   } else autoT = 0;

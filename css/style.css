@@ -199,14 +199,12 @@ button.primary:hover{background:#000}
 .misbtn.on{background:var(--paper-2);box-shadow:inset 3px 0 0 var(--red)}
 .misbtn.on .mn{color:var(--red)}
 
-/* 미션 카드 : 힌트 */
+/* 미션 카드 */
 #mcard{margin-top:12px;padding:12px 12px 12px 14px;border-left:2px solid var(--ink)}
 #mcard[hidden]{display:none}
 #mcardtitle{font-weight:700;margin-bottom:8px}
 #mcard .row{gap:5px}
 #mcard button{font-size:var(--fs-1);padding:5px 9px}
-.hint{font-size:var(--fs-2);color:var(--ink);line-height:1.6;margin:0 0 8px;word-break:keep-all}
-.hint::before{content:"—";color:var(--ink-3);margin-right:6px}
 
 .mapbtn{width:100%;text-align:left;padding:9px 12px;font-size:var(--fs-3)}
 .mapbtn.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--red)}
