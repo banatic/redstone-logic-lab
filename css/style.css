@@ -209,9 +209,12 @@ button.primary:hover{background:#000}
 .mapbtn{width:100%;text-align:left;padding:9px 12px;font-size:var(--fs-3)}
 .mapbtn.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--red)}
 
-#exlist{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.exbtn{text-align:left;line-height:1.35;padding:7px 9px;word-break:keep-all;font-size:var(--fs-1)}
-.exbtn.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--red)}
+/* 박물관 목록 */
+#mulist{display:flex;flex-direction:column}
+#mulist .misbtn{padding-left:10px}
+/* 전시물 설명 한 줄 */
+.hint{font-size:var(--fs-2);color:var(--ink-2);line-height:1.6;margin:0 0 8px;word-break:keep-all}
+.hint[hidden]{display:none}
 
 /* 접어 둔 설정 */
 #more{margin-top:20px;border-top:1px solid var(--rule);padding-top:10px}

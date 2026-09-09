@@ -7,6 +7,7 @@ import { Particles } from './particles.js';
 import { particleColors, blockAABB } from './shapes.js';
 import { Player } from './player.js';
 import { EXAMPLES, loadExample } from './examples.js';
+import { EXHIBITS, MUSEUM_ORIGIN, loadExhibit } from './museum.js';
 import {
   MISSIONS, ORIGIN, loadMission, gradeMission, frameIndices, countPlaced,
   currentMask, currentOut, maskForRow, inputName, outputName, frameBlocks, placeFrame,
@@ -15,7 +16,7 @@ import {
 // ---------------------------------------------------------------- 기본 설정
 const ALLBLOCKS = [B.STONE, B.GLASS, B.WIRE, B.RSBLOCK, B.LAMP, B.REPEATER, B.LEVER, B.TORCH];
 const SAVE_KEY = 'redstone-lab-save-v1';    // 수동 저장 슬롯 (내 작업장)
-const MAPS_KEY = 'redstone-lab-maps-v2';    // 모든 맵 자동 저장
+const MAPS_KEY = 'redstone-lab-maps-v3';    // 모든 맵 자동 저장
 const PROG_KEY = 'redstone-lab-prog-v2';    // 미션 진행 상황
 const DIRNAME = ['동(+X)', '서(-X)', '남(+Z)', '북(-Z)'];
 
@@ -25,15 +26,15 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x93c6e8);
-scene.fog = new THREE.Fog(0x93c6e8, 40, 110);
+scene.fog = new THREE.Fog(0x93c6e8, 90, 260);
 
-const camera = new THREE.PerspectiveCamera(72, 1, 0.05, 400);
+const camera = new THREE.PerspectiveCamera(72, 1, 0.05, 700);
 scene.add(new THREE.HemisphereLight(0xffffff, 0x585848, 1.15));
 const sun = new THREE.DirectionalLight(0xfff4e2, 0.75);
 sun.position.set(30, 60, 18);
 scene.add(sun);
 
-const world = new World(48, 20, 48);
+const world = new World(96, 20, 96);
 const rs = new Redstone(world);
 const vr = new VoxelRenderer(scene, world, rs);
 const player = new Player(world, camera);
@@ -288,16 +289,19 @@ let labels = new Map();
 function labelFor(i, id) {
   return labels.get(i) || NAME[id];
 }
-function buildLabels(m) {
+function buildLabels(mis, map) {
   labels = new Map();
-  if (!m) return;
-  m.inputs.forEach(([x, y, z], k) => {
-    labels.set(world.idx(ORIGIN[0] + x, ORIGIN[1] + y, ORIGIN[2] + z), '레버 ' + inputName(m, k));
-  });
-  m.outputs.forEach(([x, y, z], k) => {
-    labels.set(world.idx(ORIGIN[0] + x, ORIGIN[1] + y, ORIGIN[2] + z),
-      '램프 ' + (m.outputs.length > 1 ? outputName(m, k) : ''));
-  });
+  const put = (base, [x, y, z], name) =>
+    labels.set(world.idx(base[0] + x, base[1] + y, base[2] + z), name);
+  if (mis) {
+    mis.inputs.forEach((p, k) => put(ORIGIN, p, '레버 ' + inputName(mis, k)));
+    mis.outputs.forEach((p, k) => put(ORIGIN, p,
+      '램프 ' + (mis.outputs.length > 1 ? outputName(mis, k) : '')));
+  } else if (map && map.exhibit) {
+    const e = map.exhibit;
+    e.inputs.forEach((p, k) => put(MUSEUM_ORIGIN, p, '레버 ' + (e.inNames ? e.inNames[k] : k + 1)));
+    for (const [name, p] of Object.entries(e.probes)) put(MUSEUM_ORIGIN, p, '램프 ' + name);
+  }
 }
 
 /* (tx,tz) 를 비스듬히 내려다보는 위치로 이동 */
@@ -312,7 +316,7 @@ function lookAt(tx, tz, dist) {
 }
 
 /* 블럭 묶음 전체가 화면에 들어오는 위치로 */
-function viewBlocks(blocks) {
+function viewBlocks(blocks, base = ORIGIN) {
   let minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9;
   for (const b of blocks) {
     if (b[0] < minX) minX = b[0];
@@ -320,10 +324,10 @@ function viewBlocks(blocks) {
     if (b[2] < minZ) minZ = b[2];
     if (b[2] > maxZ) maxZ = b[2];
   }
-  if (minX > maxX) { lookAt(22.5, 22.5, 13); return; }
+  if (minX > maxX) { lookAt(46.5, 46.5, 16); return; }
   const span = Math.max(maxX - minX, maxZ - minZ) + 5;
-  lookAt(ORIGIN[0] + (minX + maxX) / 2 + 0.5,
-    ORIGIN[2] + (minZ + maxZ) / 2 + 0.5,
+  lookAt(base[0] + (minX + maxX) / 2 + 0.5,
+    base[2] + (minZ + maxZ) / 2 + 0.5,
     Math.max(10, span * 0.85));
 }
 
@@ -337,10 +341,15 @@ const MAPS = [{ key: 'home', name: '내 작업장', kind: 'home', data: null, vi
 MISSIONS.forEach((m, k) => {
   MAPS.push({ key: 'm:' + m.id, name: `${k + 1}. ${m.title}`, kind: 'mission', mission: m, data: null, view: null });
 });
-const EX0 = MAPS.length;
-for (const ex of EXAMPLES) {
-  MAPS.push({ key: 'ex:' + ex.id, name: '예제 · ' + ex.name, kind: 'example', ex, data: null, view: null });
+// 박물관 : 자동 생성한 큰 회로 + 진리표로 채점할 수 없는 회로들
+const MU0 = MAPS.length;
+for (const e of EXHIBITS) {
+  MAPS.push({ key: 'mu:' + e.id, name: e.title, kind: 'museum', exhibit: e, note: e.note, data: null, view: null });
 }
+for (const ex of EXAMPLES) {
+  MAPS.push({ key: 'ex:' + ex.id, name: ex.name, kind: 'museum', ex, note: ex.desc, data: null, view: null });
+}
+const MUSEUM = MAPS.slice(MU0);
 
 let curMap = 0;
 const isHome = () => curMap === 0;
@@ -363,7 +372,7 @@ function stashCurrent() {
 
 /* 내 작업장 첫 방문용 맛보기 회로 */
 function buildStarter() {
-  const x = 20, y = 1, z = 22;
+  const x = 44, y = 1, z = 46;
   world.set(x, y, z, B.LEVER, 5);
   world.set(x + 1, y, z, B.WIRE);
   world.set(x + 2, y, z, B.WIRE);
@@ -374,15 +383,16 @@ function buildStarter() {
 /* 저장된 시점이 없을 때(예: 새로고침 뒤 처음 들어갈 때) 쓸 기본 시점 */
 function defaultView(m) {
   if (m.kind === 'mission') viewBlocks([...frameBlocks(m.mission), ...(m.mission.start || [])]);
-  else if (m.kind === 'example') viewBlocks(m.ex.blocks);
-  else lookAt(22.5, 22.5, 13);
+  else if (m.kind === 'museum') viewBlocks(m.exhibit ? m.exhibit.blocks : m.ex.blocks,
+    m.exhibit ? MUSEUM_ORIGIN : ORIGIN);
+  else lookAt(46.5, 46.5, 16);
 }
 
 function initMap(m) {
   if (m.kind === 'mission') {
     loadMission(world, m.mission);
-  } else if (m.kind === 'example') {
-    loadExample(world, m.ex);
+  } else if (m.kind === 'museum') {
+    if (m.exhibit) loadExhibit(world, m.exhibit); else loadExample(world, m.ex);
   } else {
     world.reset();
     buildStarter();
@@ -399,12 +409,19 @@ function afterMapChange() {
   particles.clear();
 
   // 미션마다 쓸 수 있는 블럭이 다르다
-  hot = (m.kind === 'mission' && mis && mis.allowed) ? mis.allowed.slice() : ALLBLOCKS.slice();
+  hot = m.kind === 'museum' ? []
+    : (m.kind === 'mission' && mis && mis.allowed) ? mis.allowed.slice() : ALLBLOCKS.slice();
   buildHotbar();
 
-  // 고정 블럭 잠금
-  locks = (m.kind === 'mission' && mis) ? frameIndices(world, mis) : new Set();
-  buildLabels(mis);
+  // 고정 블럭 잠금. 박물관은 레버 말고 전부 잠근다
+  if (m.kind === 'museum') {
+    locks = new Set();
+    for (let i = 0; i < world.n; i++) {
+      const id = world.id[i];
+      if (id !== B.AIR && id !== B.FLOOR && id !== B.LEVER) locks.add(i);
+    }
+  } else locks = (m.kind === 'mission' && mis) ? frameIndices(world, mis) : new Set();
+  buildLabels(mis, m);
 
   lastGrade = null;
   wasPass = undefined;
@@ -420,7 +437,7 @@ function afterMapChange() {
   buildMissionList();
   buildMissionCard();
   el('btnGoHome').classList.toggle('on', isHome());
-  [...el('exlist').children].forEach((b, k) => b.classList.toggle('on', curMap === EX0 + k));
+  buildMuseumList();
   runGrade();
   updateMissionPanel();
 }
@@ -606,11 +623,26 @@ function buildMissionList() {
 }
 
 function buildMissionCard() {
-  const m = curMission();
+  const map = MAPS[curMap];
   const card = el('mcard');
-  if (!m) { card.hidden = true; return; }
+  const named = curMission() || map.kind === 'museum';
+  if (!named) { card.hidden = true; return; }
   card.hidden = false;
-  el('mcardtitle').textContent = m.title;
+  el('mcardtitle').textContent = map.name;
+  el('mcardnote').textContent = map.note || '';
+  el('mcardnote').hidden = !map.note;
+}
+
+function buildMuseumList() {
+  const list = el('mulist');
+  list.innerHTML = '';
+  MUSEUM.forEach((m, k) => {
+    const b = document.createElement('button');
+    b.className = 'misbtn' + (curMap === MU0 + k ? ' on' : '');
+    b.innerHTML = `<span class="mt">${m.name}</span>`;
+    b.onclick = () => gotoMap(MU0 + k);
+    list.appendChild(b);
+  });
 }
 
 const toggleHelp = () => el('help').classList.toggle('hidden');
@@ -644,15 +676,6 @@ el('btnResetProg').onclick = () => {
   buildMissionList(); buildMissionCard();
   toast('진행 상황을 지웠습니다');
 };
-
-// 예제 회로 목록 (교사 시연용)
-EXAMPLES.forEach((ex, k) => {
-  const b = document.createElement('button');
-  b.className = 'exbtn';
-  b.textContent = ex.name;
-  b.onclick = () => gotoMap(EX0 + k);
-  el('exlist').appendChild(b);
-});
 
 el('btnClear').onclick = () => {
   if (curMap !== 0) gotoMap(0);
@@ -905,7 +928,7 @@ if (MAPS[0].data) {
   world.deserialize(MAPS[0].data);
   rs.compute(); rs.settle(60);
   vr.dirty = true;
-  lookAt(22.5, 22.5, 14);
+  lookAt(46.5, 46.5, 16);
 } else {
   initMap(MAPS[0]);
 }

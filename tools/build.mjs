@@ -86,6 +86,7 @@ const MODULES = [
   ['player', 'js/player.js'],
   ['examples', 'js/examples.js'],
   ['missions', 'js/missions.js'],
+  ['museum', 'js/museum.js'],
 ];
 let bundle = '(function () {\n\'use strict\';\nconst __M = {};\n' + threeIife;
 for (const [name, file] of MODULES) bundle += wrapModule(name, file);
