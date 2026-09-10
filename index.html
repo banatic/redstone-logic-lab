@@ -249,6 +249,40 @@ button.primary:hover{background:#000}
 #help b{font-weight:700}
 
 /* ================================================================
+   회로 참고 (오른쪽)
+================================================================= */
+#ref{position:fixed;right:14px;top:52px;width:342px;max-height:calc(100vh - 66px);
+  overflow-y:auto;padding:18px 20px 20px;z-index:7;
+  background:var(--paper);border:1px solid rgba(26,26,26,.18);border-radius:var(--radius);
+  box-shadow:var(--shadow)}
+#ref.hidden{display:none}
+#ref .close{position:absolute;right:14px;top:14px;font-size:var(--fs-1);padding:4px 9px}
+#ref h2{font-size:var(--fs-3);font-weight:700;margin:20px 0 6px}
+#ref h2:first-of-type{margin-top:0}
+#ref .eq{font-size:var(--fs-3);margin:3px 0;letter-spacing:.01em}
+#ref svg{display:block;width:100%;height:auto;margin:8px 0 2px;overflow:visible}
+#ref svg text{fill:var(--ink);font-family:inherit;font-size:11px}
+#ref .wire{stroke:var(--ink);fill:none;stroke-width:1.4;stroke-linecap:round}
+#ref .gate{stroke:var(--ink);fill:var(--paper);stroke-width:1.4;stroke-linejoin:round}
+#ref .box{stroke:var(--ink);fill:var(--paper-2);stroke-width:1.4}
+#ref .dot{fill:var(--ink)}
+
+#ref table.gates{border-collapse:collapse;width:100%}
+#ref table.gates td{padding:3px 0;vertical-align:middle;border-bottom:1px solid var(--rule)}
+#ref table.gates tr:last-child td{border-bottom:0}
+#ref table.gates td.sym{width:50px}
+#ref table.gates td.eq{font-size:var(--fs-3);white-space:nowrap;padding-right:10px}
+#ref table.gates td.dsc{font-size:var(--fs-1);color:var(--ink-2);word-break:keep-all}
+#ref table.gates svg{margin:0}
+
+/* 참고 패널이 열리면 미션 패널이 왼쪽으로 비켜난다 */
+body.refopen #mpanel{right:372px}
+@media (max-width:900px){
+  #ref{width:calc(100vw - 28px)}
+  body.refopen #mpanel{right:14px}
+}
+
+/* ================================================================
    dev.html 을 file:// 로 열었을 때의 안내
 ================================================================= */
 #filewarn{position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;
@@ -292,6 +326,7 @@ button.primary:hover{background:#000}
 
 <div id="topright">
   <button id="btnBack" hidden>내 작업장으로</button>
+  <button id="btnRef">회로 참고</button>
   <button id="btnHelp">조작법</button>
   <button id="btnMenu">메뉴</button>
 </div>
@@ -339,11 +374,105 @@ button.primary:hover{background:#000}
   </ul>
 </div>
 
+<!-- 회로 참고 : 기본 게이트 기호와 가산기 설계 -->
+<div id="ref" class="panel hidden">
+  <button id="btnRefClose" class="close">닫기</button>
+
+  <h2>기본 게이트</h2>
+  <table class="gates">
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,9 H8 M0,17 H8 M29,13 H41"/>
+        <path class="gate" d="M8,4 H20 A9,9 0 0 1 20,22 H8 Z"/></svg></td>
+      <td class="eq">A &middot; B</td><td class="dsc">둘 다 1일 때만 1</td>
+    </tr>
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,9 H10 M0,17 H10 M30,13 H41"/>
+        <path class="gate" d="M7,4 Q15,13 7,22 Q22,22 30,13 Q22,4 7,4 Z"/></svg></td>
+      <td class="eq">A + B</td><td class="dsc">하나라도 1이면 1</td>
+    </tr>
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,13 H10 M35,13 H41"/>
+        <path class="gate" d="M10,4 L28,13 L10,22 Z"/>
+        <circle class="gate" cx="31" cy="13" r="3"/></svg></td>
+      <td class="eq">&not;A</td><td class="dsc">뒤집는다</td>
+    </tr>
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,9 H9 M0,17 H9 M33,13 H41"/>
+        <path class="gate" d="M10,4 Q18,13 10,22 Q25,22 33,13 Q25,4 10,4 Z"/>
+        <path class="wire" d="M4,4 Q12,13 4,22"/></svg></td>
+      <td class="eq">A &oplus; B</td><td class="dsc">서로 다를 때만 1</td>
+    </tr>
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,9 H8 M0,17 H8 M32,13 H41"/>
+        <path class="gate" d="M8,4 H20 A9,9 0 0 1 20,22 H8 Z"/>
+        <circle class="gate" cx="32" cy="13" r="3"/></svg></td>
+      <td class="eq">&not;(A &middot; B)</td><td class="dsc">AND 의 반대</td>
+    </tr>
+    <tr>
+      <td class="sym"><svg viewBox="0 0 44 26" width="44" height="26" aria-hidden="true">
+        <path class="wire" d="M0,9 H10 M0,17 H10 M36,13 H41"/>
+        <path class="gate" d="M7,4 Q15,13 7,22 Q22,22 30,13 Q22,4 7,4 Z"/>
+        <circle class="gate" cx="33" cy="13" r="3"/></svg></td>
+      <td class="eq">&not;(A + B)</td><td class="dsc">이 게임의 기본 부품</td>
+    </tr>
+  </table>
+
+  <h2>반가산기</h2>
+  <p class="eq">합 S = A &oplus; B</p>
+  <p class="eq">올림 C = A &middot; B</p>
+  <svg viewBox="0 0 300 108" aria-label="반가산기 회로도">
+    <text x="8" y="22">A</text>
+    <text x="8" y="38">B</text>
+    <path class="wire" d="M22,18 H88 M22,34 H88"/>
+    <path class="wire" d="M72,18 V29 M72,39 V72 H88"/>
+    <path class="wire" d="M56,34 V88 H88"/>
+    <circle class="dot" cx="72" cy="18" r="2.5"/>
+    <circle class="dot" cx="56" cy="34" r="2.5"/>
+    <rect class="box" x="88" y="10" width="60" height="32" rx="3"/>
+    <text x="118" y="30" text-anchor="middle">XOR</text>
+    <rect class="box" x="88" y="64" width="60" height="32" rx="3"/>
+    <text x="118" y="84" text-anchor="middle">AND</text>
+    <path class="wire" d="M148,26 H240 M148,80 H240"/>
+    <text x="246" y="30">합</text>
+    <text x="246" y="84">올림</text>
+  </svg>
+
+  <h2>전가산기</h2>
+  <p class="eq">합 S = A &oplus; B &oplus; C</p>
+  <p class="eq">올림 = A&middot;B + C&middot;(A &oplus; B)</p>
+  <svg viewBox="0 0 300 164" aria-label="전가산기 회로도">
+    <text x="8" y="26">A</text>
+    <text x="8" y="46">B</text>
+    <text x="8" y="86">C</text>
+    <path class="wire" d="M22,22 H64 M22,42 H64"/>
+    <path class="wire" d="M22,82 H144 M156,82 H164 V42 H176"/>
+    <rect class="box" x="64" y="10" width="72" height="44" rx="3"/>
+    <text x="100" y="36" text-anchor="middle">반가산기</text>
+    <rect class="box" x="176" y="10" width="72" height="44" rx="3"/>
+    <text x="212" y="36" text-anchor="middle">반가산기</text>
+    <path class="wire" d="M136,22 H176"/>
+    <path class="wire" d="M136,42 H150 V116 H170"/>
+    <path class="wire" d="M248,42 H262 V148 H158 V126 H170"/>
+    <rect class="box" x="170" y="108" width="52" height="26" rx="3"/>
+    <text x="196" y="126" text-anchor="middle">OR</text>
+    <path class="wire" d="M248,22 H278 M222,121 H250"/>
+    <text x="266" y="16" text-anchor="middle">합</text>
+    <text x="256" y="125">올림</text>
+  </svg>
+  <p class="dim small">가로줄이 끊긴 곳은 서로 이어지지 않고 지나가는 자리입니다.</p>
+</div>
+
 <!-- 시작 / 메뉴 화면 -->
 <div id="menu">
   <div class="panel side">
     <h1>레드스톤 논리회로 실험실</h1>
     <button id="btnPlay" class="primary">시작하기</button>
+    <button id="btnRefMenu" class="wide">회로 참고</button>
     <button id="btnHelpMenu" class="wide">조작법</button>
 
     <h2>미션</h2>
@@ -55648,6 +55777,9 @@ function afterMapChange() {
   if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
   else back.hidden = true;
 
+  // 가산기 미션에서는 설계도를 먼저 펼쳐 준다 (직접 닫았으면 그대로 둔다)
+  if (mis && (mis.id === 'half' || mis.id === 'full') && !refDismissed) showPanel('ref');
+
   buildMissionList();
   buildMissionCard();
   el('btnGoHome').classList.toggle('on', isHome());
@@ -55710,8 +55842,15 @@ function loadProgress() {
   } catch (err) { /* 무시 */ }
 }
 const isCleared = (m) => prog.cleared[m.id] !== undefined;
+/*
+ 컴퓨터실 PC 는 껐다 켜면 초기화되므로 1일차 진도가 남아 있지 않다.
+ 그래서 1일차 미션과 2일차의 첫 미션은 언제나 열어 둔다. 그 뒤로만 순서대로 열린다.
+*/
 function isUnlocked(k) {
-  return prog.unlockAll || k === 0 || isCleared(MISSIONS[k - 1]);
+  if (prog.unlockAll || k === 0) return true;
+  if (MISSIONS[k].day === 1) return true;
+  if (MISSIONS[k - 1].day === 1) return true;
+  return isCleared(MISSIONS[k - 1]);
 }
 
 // ---------------------------------------------------------------- 미션 패널
@@ -55859,10 +55998,24 @@ function buildMuseumList() {
   });
 }
 
-const toggleHelp = () => el('help').classList.toggle('hidden');
-el('btnHelp').onclick = toggleHelp;
-el('btnHelpMenu').onclick = toggleHelp;
-el('btnHelpClose').onclick = () => el('help').classList.add('hidden');
+/* 오른쪽 패널은 한 번에 하나만 띄운다 */
+function showPanel(id) {
+  for (const k of ['help', 'ref']) el(k).classList.toggle('hidden', k !== id);
+  document.body.classList.toggle('refopen', id === 'ref');
+}
+function togglePanel(id) {
+  const open = el(id).classList.contains('hidden');
+  if (id === 'ref' && !open) refDismissed = true;   // 직접 닫았으면 다시 펼치지 않는다
+  showPanel(open ? id : null);
+}
+let refDismissed = false;
+
+el('btnHelp').onclick = () => togglePanel('help');
+el('btnHelpMenu').onclick = () => togglePanel('help');
+el('btnHelpClose').onclick = () => showPanel(null);
+el('btnRef').onclick = () => togglePanel('ref');
+el('btnRefMenu').onclick = () => togglePanel('ref');
+el('btnRefClose').onclick = () => { refDismissed = true; showPanel(null); };
 
 el('btnGoHome').onclick = () => gotoMap(0);
 el('btnBack').onclick = () => gotoMap(0);

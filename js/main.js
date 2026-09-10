@@ -434,6 +434,9 @@ function afterMapChange() {
   if (!isHome()) { back.hidden = false; back.textContent = '내 작업장으로'; }
   else back.hidden = true;
 
+  // 가산기 미션에서는 설계도를 먼저 펼쳐 준다 (직접 닫았으면 그대로 둔다)
+  if (mis && (mis.id === 'half' || mis.id === 'full') && !refDismissed) showPanel('ref');
+
   buildMissionList();
   buildMissionCard();
   el('btnGoHome').classList.toggle('on', isHome());
@@ -496,8 +499,15 @@ function loadProgress() {
   } catch (err) { /* 무시 */ }
 }
 const isCleared = (m) => prog.cleared[m.id] !== undefined;
+/*
+ 컴퓨터실 PC 는 껐다 켜면 초기화되므로 1일차 진도가 남아 있지 않다.
+ 그래서 1일차 미션과 2일차의 첫 미션은 언제나 열어 둔다. 그 뒤로만 순서대로 열린다.
+*/
 function isUnlocked(k) {
-  return prog.unlockAll || k === 0 || isCleared(MISSIONS[k - 1]);
+  if (prog.unlockAll || k === 0) return true;
+  if (MISSIONS[k].day === 1) return true;
+  if (MISSIONS[k - 1].day === 1) return true;
+  return isCleared(MISSIONS[k - 1]);
 }
 
 // ---------------------------------------------------------------- 미션 패널
@@ -645,10 +655,24 @@ function buildMuseumList() {
   });
 }
 
-const toggleHelp = () => el('help').classList.toggle('hidden');
-el('btnHelp').onclick = toggleHelp;
-el('btnHelpMenu').onclick = toggleHelp;
-el('btnHelpClose').onclick = () => el('help').classList.add('hidden');
+/* 오른쪽 패널은 한 번에 하나만 띄운다 */
+function showPanel(id) {
+  for (const k of ['help', 'ref']) el(k).classList.toggle('hidden', k !== id);
+  document.body.classList.toggle('refopen', id === 'ref');
+}
+function togglePanel(id) {
+  const open = el(id).classList.contains('hidden');
+  if (id === 'ref' && !open) refDismissed = true;   // 직접 닫았으면 다시 펼치지 않는다
+  showPanel(open ? id : null);
+}
+let refDismissed = false;
+
+el('btnHelp').onclick = () => togglePanel('help');
+el('btnHelpMenu').onclick = () => togglePanel('help');
+el('btnHelpClose').onclick = () => showPanel(null);
+el('btnRef').onclick = () => togglePanel('ref');
+el('btnRefMenu').onclick = () => togglePanel('ref');
+el('btnRefClose').onclick = () => { refDismissed = true; showPanel(null); };
 
 el('btnGoHome').onclick = () => gotoMap(0);
 el('btnBack').onclick = () => gotoMap(0);
