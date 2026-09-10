@@ -110,6 +110,22 @@ export const MISSIONS = [
     allowed: GATE_ALL,
   },
   {
+    // 모드 0 = 더하기, 1 = 빼기.
+    //   더하기 : 합 = A⊕B,  올림 = A·B
+    //   빼기   : 차 = A⊕B,  빌림 = ¬A·B
+    // 결과는 모드와 무관하게 A⊕B 이고, 자리만 A·B ↔ ¬A·B 로 바뀐다 = B·(A⊕모드)
+    id: 'addsub', day: 2, title: '가감산기',
+    inputs: [[0, 0, 0], [0, 0, 12], [0, 0, 24]],
+    inNames: ['A', 'B', '모드'],
+    outputs: [[34, 0, 6], [34, 0, 18]],
+    outNames: ['결과', '자리'],
+    truth: Array.from({ length: 8 }, (_, m) => {
+      const a = m & 1, b = (m >> 1) & 1, mode = (m >> 2) & 1;
+      return [a ^ b, b & (a ^ mode)];
+    }),
+    allowed: GATE_ALL,
+  },
+  {
     id: 'full', day: 2, title: '전가산기 ★',
     inputs: [[0, 0, 0], [0, 0, 9], [0, 0, 18]],
     inNames: ['A', 'B', 'C'],

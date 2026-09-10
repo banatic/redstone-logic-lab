@@ -435,7 +435,7 @@ function afterMapChange() {
   else back.hidden = true;
 
   // 가산기 미션에서는 설계도를 먼저 펼쳐 준다 (직접 닫았으면 그대로 둔다)
-  if (mis && (mis.id === 'half' || mis.id === 'full') && !refDismissed) showPanel('ref');
+  if (mis && REF_MISSIONS.has(mis.id) && !refDismissed) showPanel('ref');
 
   buildMissionList();
   buildMissionCard();
@@ -666,6 +666,7 @@ function togglePanel(id) {
   showPanel(open ? id : null);
 }
 let refDismissed = false;
+const REF_MISSIONS = new Set(['half', 'addsub', 'full']);   // 설계도를 먼저 펼쳐 줄 미션
 
 el('btnHelp').onclick = () => togglePanel('help');
 el('btnHelpMenu').onclick = () => togglePanel('help');

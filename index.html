@@ -464,6 +464,32 @@ body.refopen #mpanel{right:372px}
     <text x="266" y="16" text-anchor="middle">합</text>
     <text x="256" y="125">올림</text>
   </svg>
+
+  <h2>가감산기</h2>
+  <p class="eq">모드 0 = 더하기 &nbsp; 모드 1 = 빼기</p>
+  <p class="eq">더하기 &nbsp; 합 = A &oplus; B &nbsp; 올림 = A &middot; B</p>
+  <p class="eq">빼기 &nbsp;&nbsp;&nbsp; 차 = A &oplus; B &nbsp; 빌림 = &not;A &middot; B</p>
+  <p class="dim small">결과는 모드와 상관없이 같습니다. 자리만 A&middot;B 와 &not;A&middot;B 사이에서 바뀝니다.</p>
+  <svg viewBox="0 0 300 142" aria-label="가감산기 회로도">
+    <text x="8" y="26">A</text>
+    <text x="8" y="46">B</text>
+    <text x="8" y="96">모드</text>
+    <path class="wire" d="M26,22 H100 M26,42 H100 M40,92 H100"/>
+    <path class="wire" d="M32,42 V122 H196"/>
+    <path class="wire" d="M48,22 V36 M48,48 V76 H100"/>
+    <circle class="dot" cx="32" cy="42" r="2.5"/>
+    <circle class="dot" cx="48" cy="22" r="2.5"/>
+    <rect class="box" x="100" y="14" width="56" height="32" rx="3"/>
+    <text x="128" y="34" text-anchor="middle">XOR</text>
+    <rect class="box" x="100" y="64" width="56" height="32" rx="3"/>
+    <text x="128" y="84" text-anchor="middle">XOR</text>
+    <rect class="box" x="196" y="100" width="56" height="32" rx="3"/>
+    <text x="224" y="120" text-anchor="middle">AND</text>
+    <path class="wire" d="M156,30 H240 M156,80 H180 V112 H196 M252,116 H272"/>
+    <text x="246" y="34">결과</text>
+    <text x="276" y="120">자리</text>
+  </svg>
+
   <p class="dim small">가로줄이 끊긴 곳은 서로 이어지지 않고 지나가는 자리입니다.</p>
 </div>
 
@@ -54897,6 +54923,22 @@ const MISSIONS = [
     allowed: GATE_ALL,
   },
   {
+    // 모드 0 = 더하기, 1 = 빼기.
+    //   더하기 : 합 = A⊕B,  올림 = A·B
+    //   빼기   : 차 = A⊕B,  빌림 = ¬A·B
+    // 결과는 모드와 무관하게 A⊕B 이고, 자리만 A·B ↔ ¬A·B 로 바뀐다 = B·(A⊕모드)
+    id: 'addsub', day: 2, title: '가감산기',
+    inputs: [[0, 0, 0], [0, 0, 12], [0, 0, 24]],
+    inNames: ['A', 'B', '모드'],
+    outputs: [[34, 0, 6], [34, 0, 18]],
+    outNames: ['결과', '자리'],
+    truth: Array.from({ length: 8 }, (_, m) => {
+      const a = m & 1, b = (m >> 1) & 1, mode = (m >> 2) & 1;
+      return [a ^ b, b & (a ^ mode)];
+    }),
+    allowed: GATE_ALL,
+  },
+  {
     id: 'full', day: 2, title: '전가산기 ★',
     inputs: [[0, 0, 0], [0, 0, 9], [0, 0, 18]],
     inNames: ['A', 'B', 'C'],
@@ -55778,7 +55820,7 @@ function afterMapChange() {
   else back.hidden = true;
 
   // 가산기 미션에서는 설계도를 먼저 펼쳐 준다 (직접 닫았으면 그대로 둔다)
-  if (mis && (mis.id === 'half' || mis.id === 'full') && !refDismissed) showPanel('ref');
+  if (mis && REF_MISSIONS.has(mis.id) && !refDismissed) showPanel('ref');
 
   buildMissionList();
   buildMissionCard();
@@ -56009,6 +56051,7 @@ function togglePanel(id) {
   showPanel(open ? id : null);
 }
 let refDismissed = false;
+const REF_MISSIONS = new Set(['half', 'addsub', 'full']);   // 설계도를 먼저 펼쳐 줄 미션
 
 el('btnHelp').onclick = () => togglePanel('help');
 el('btnHelpMenu').onclick = () => togglePanel('help');
